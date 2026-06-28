@@ -1,24 +1,34 @@
 #
-# init.usb_dac.rc — USB DAC 模式开机触发
+# init.usb_dac.rc — USB DAC 原生守护进程
 #
-# 功能: 开机自动加载 UAC2 内核模块 (但不激活)
-#      持久化属性 persist.sys.usb.dac=1 时自动激活
+# 启动 dacd（单一原生 daemon，取代 usb_dac_ctl.sh + uac2_bridge）
+# Activity 通过 Unix socket 与 daemon 通信，无需 su。
 #
-# 部署: adb push init.usb_dac.rc /vendor/etc/init/
+# 部署:
+#   adb push dacd /vendor/bin/
+#   adb push init.usb_dac.rc /vendor/etc/init/
+#   adb shell chmod 755 /vendor/bin/dacd
+#   reboot
 #
 # 依赖:
-#   u_audio.ko     — 放入 /vendor/lib/modules/
-#   usb_f_uac2.ko  — 放入 /vendor/lib/modules/
-#   uac2_bridge    — 放入 /vendor/bin/
+#   - 内核已编译 UAC2 gadget 支持 (f_uac2)
+#   - configfs 已挂载
 #
 
 on early-boot
     # UAC2 内核模块已直接编译进内核，无需 insmod
 
-on property:persist.sys.usb.dac=1
-    # 用户偏好为"开启"时自动启动 bridge
-    exec u:r:su:s0 -- /vendor/bin/usb_dac_ctl.sh on
+service dacd /vendor/bin/dacd -f
+    class main
+    user root
+    group root system
+    seclabel u:r:su:s0
+    # dacd 自行管理 Unix socket（/data/local/tmp/dacd.sock）
+    oneshot
+    # 开机启动，崩溃后不自动重启（避免 configfs 半状态残留）
 
-on property:persist.sys.usb.dac=0
-    # 用户偏好为"关闭"时停止
-    exec u:r:su:s0 -- /vendor/bin/usb_dac_ctl.sh off
+on early-boot
+    # UAC2 内核模块已直接编译进内核，无需 insmod
+
+on boot
+    start dacd

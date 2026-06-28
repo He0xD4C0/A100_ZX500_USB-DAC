@@ -34,6 +34,7 @@ imx-audio-cxd3778gf (card#1, playback)
 ```
 A105_DAC_Mode/
 ├── Image.gz              # 已编译的内核镜像（含 UAC2 驱动）
+├── build-kernel.sh       # 内核一键编译脚本
 ├── PLAN.md               # 详细技术方案
 ├── sony-gplsource/       # 索尼 GPL 源码包（.gitignore 已排除）
 ├── activity/             # Android 控制 App（Jetpack Compose）
@@ -149,18 +150,11 @@ tar -xzf gpl_source.tgz -C sony-gplsource
 
 ```bash
 # 在 WSL Ubuntu 中执行
-# 内核源码位于项目 sony-gplsource/ 目录
-cd /path/to/A105_DAC_Mode/sony-gplsource/vendor/nxp-opensource/kernel_imx/
+# 自动使用 sony-gplsource/ 下的内核源码编译
+./build-kernel.sh
 
-# 应用本项目提供的内核配置
-cp /path/to/A105_DAC_Mode/kernel_patches/nwa105_kernel_config .config
-
-# 编译
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-     KCFLAGS='-w' -j$(nproc) Image.gz modules
-
-# 将编译好的内核镜像复制到本项目根目录
-cp arch/arm64/boot/Image.gz /path/to/A105_DAC_Mode/Image.gz
+# 也可指定自定义内核源码路径:
+# ./build-kernel.sh /custom/path/to/kernel_imx
 ```
 
 ---
@@ -201,7 +195,7 @@ cp arch/arm64/boot/Image.gz /path/to/A105_DAC_Mode/Image.gz
 
 ### GPL 源码
 
-本项目中 `Image.gz`（预编译内核）基于索尼发布的 GPL 源码编译。源码已提取到 `sony-gplsource/` 目录（已被 `.gitignore` 排除，不会进入版本控制）。完整的 GPL 源码包也可从索尼官方下载：
+本项目中 `Image.gz`（预编译内核）基于索尼发布的 GPL 源码编译。源码提取到 `sony-gplsource/` 目录（已被 `.gitignore` 排除，不会进入版本控制）。完整的 GPL 源码包也可从索尼官方下载：
 
 > **https://oss.sony.net/Products/Linux/Audio/NW-A105_Ver20211130.html**
 
