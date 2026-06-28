@@ -26,9 +26,14 @@ ehthumbs.db
 modules.order
 Module.symvers
 
+/daemon/uac2_bridge
+
 # ─── Python ────────────────────────────────────────────────
 __pycache__/
 *.pyc
+
+# ─── 索尼 GPL 源码包（完整 AOSP 树，~4GB） ───────────────
+/sony-gplsource/
 
 # ─── 杂项临时文件 ─────────────────────────────────────────
 *.log

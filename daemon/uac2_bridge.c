@@ -16,7 +16,7 @@
  * 采样率/位深/声道: 从 /proc/asound 自动检测 UAC2 与 PC 协商后的格式,
  *                   无需手动指定.
  *
- * Copyright 2026 — 基于 GPL v2 发布
+ * Copyright 2026 — 基于 GPL v3 发布
  */
 
 #include <stdio.h>
