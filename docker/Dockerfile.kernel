@@ -1,0 +1,55 @@
+# NW-A105 USB DAC — 内核交叉编译环境
+#
+# 基于 Ubuntu 24.04，预装 aarch64-linux-gnu 交叉编译工具链
+#
+# 构建:
+#   docker build -t nwa105-kernel-builder -f docker/Dockerfile.kernel .
+#
+# 运行 (需挂载内核源码):
+#   docker run -it --rm -v /path/to/kernel_imx:/workspace/kernel \
+#     nwa105-kernel-builder
+#
+# 在容器内编译:
+#   cd /workspace/kernel
+#   make ARCH=arm64 android_dmp1_defconfig
+#   echo "CONFIG_USB_CONFIGFS_F_UAC2=y" >> .config
+#   make ARCH=arm64 olddefconfig
+#   make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image.gz dtbs modules
+
+FROM ubuntu:24.04
+
+LABEL maintainer="NW-A105 USB DAC Project"
+LABEL description="Kernel cross-compilation environment for NW-A105 (arm64)"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装交叉编译工具链及内核编译依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # ARM64 交叉编译器
+    gcc-aarch64-linux-gnu \
+    # 内核编译工具
+    make \
+    bc \
+    bison \
+    flex \
+    libssl-dev \
+    libelf-dev \
+    device-tree-compiler \
+    # 通用工具
+    cpio \
+    kmod \
+    ca-certificates \
+    wget \
+    xz-utils \
+    file \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 验证工具链
+RUN aarch64-linux-gnu-gcc --version && \
+    echo "=== 验证汇编器 ===" && \
+    aarch64-linux-gnu-as --version | head -1
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]

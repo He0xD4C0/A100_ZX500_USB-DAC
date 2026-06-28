@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <errno.h>
