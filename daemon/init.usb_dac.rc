@@ -1,0 +1,24 @@
+#
+# init.usb_dac.rc — USB DAC 模式开机触发
+#
+# 功能: 开机自动加载 UAC2 内核模块 (但不激活)
+#      持久化属性 persist.sys.usb.dac=1 时自动激活
+#
+# 部署: adb push init.usb_dac.rc /vendor/etc/init/
+#
+# 依赖:
+#   u_audio.ko     — 放入 /vendor/lib/modules/
+#   usb_f_uac2.ko  — 放入 /vendor/lib/modules/
+#   uac2_bridge    — 放入 /vendor/bin/
+#
+
+on early-boot
+    # UAC2 内核模块已直接编译进内核，无需 insmod
+
+on property:persist.sys.usb.dac=1
+    # 用户偏好为"开启"时自动启动 bridge
+    exec u:r:su:s0 -- /vendor/bin/usb_dac_ctl.sh on
+
+on property:persist.sys.usb.dac=0
+    # 用户偏好为"关闭"时停止
+    exec u:r:su:s0 -- /vendor/bin/usb_dac_ctl.sh off
