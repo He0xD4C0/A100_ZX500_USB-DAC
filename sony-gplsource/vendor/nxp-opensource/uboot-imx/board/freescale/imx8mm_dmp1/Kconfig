@@ -1,0 +1,102 @@
+if TARGET_IMX8MM_DMP1 || TARGET_IMX8MM_DDR4_EVK
+
+config SYS_BOARD
+	default "imx8mm_dmp1"
+
+config SYS_VENDOR
+	default "freescale"
+
+config SYS_CONFIG_NAME
+	default "imx8mm_dmp1"
+
+config DMP
+	bool "Define product as DMP"
+	help
+	  Define product as DMP. This is used to enable the codes
+	  for DMP specific feature.
+
+config SUPPORT_SERVICE_MODE
+	bool "Enable booting up the service mode"
+	help
+	  Enable booting up the service mode. Service mode is a
+	  generic term for initialize, diag and service mode.
+
+config ICX_FASTBOOT_MAGIC_KEY
+	bool "Enable pressing magic keys to enter fastboot mode"
+	help
+	  Enable pressing magic keys (usually play control keys) to
+	  enter fastboot mode. To start firmware download mode
+	  (so called uuu) and debug facilities.
+	  It's may be better that enable this option only with
+	  debug/developing build.
+
+config ICX_SDCARD_POWER_DOWN_RESET
+	bool "Reset SD Card by power down"
+	default n
+	help
+	  Reset SD Card by power down. But this causes power line
+	  glitch on SD Card power line and reverse voltage between
+	  CMD and VDD line.
+	  We recommend that this option should be 'N'.
+
+config ICX_ERRATA_BD71837_REVA0
+	bool "Workaround for REVA0 BUG"
+	default y
+	help
+	  Enable a workaround provided by ROHM.
+	  We recommend that this option should be 'Y'.
+
+config ICX_DEAD_BATTERY
+	bool "Enable dead battery control"
+	default y
+	help
+	  Enable dead battery control.
+	  We recommend that this option should be 'Y'.
+
+config ICX_OTG_ALL_SUSPEND
+	bool "Suspend all OTG channel at boot"
+	default y
+	help
+	  Say Y to suspend all OTG channels at boot.
+	  It may reduce power consumption at kernel suspend.
+	  Especially, kernel doesn't use one or more OTG channel.
+	  Note: Fastboot is still available (updating firmware by uuu).
+	  Say N to don't suspend OTG channgels at boot.
+	  Use this option when enable all OTG channel by kernel.
+
+config CMD_SRKCHK
+	bool "Enable srkchk_d and srkchk_p command"
+	default y
+	help
+	  Enable srkchk_d and srkchk_p command.
+	  We recommend that this option should be 'Y'.
+
+config ICX_DISABLE_FORCE_UNLOCK
+	bool "Disable force unlock mode"
+	help
+	  Disable force unlock mode for ship fw.
+
+config ICX_UNLOCKED_LOGO
+	bool "Display logo at boot if device is oem unlocked"
+	default y
+	help
+	  If device is oem unlocked, device have to inform user.
+	  We recommend that this option should be 'Y'.
+
+config ICX_UNLOCKED_LOGO_OFFSET
+	hex "unlocked logo block offset in bootloader"
+	default 0x2000 if ICX_UNLOCKED_LOGO
+	help
+	  Offset (number of blocks) of unlocked logo bmp data
+	  in bootloader partition. Default value is 4MB.
+
+config ICX_UNLOCKED_LOGO_COUNT
+	hex "unlocked logo block count of bmp"
+	default 0x1800 if ICX_UNLOCKED_LOGO
+	help
+	  Size of unlocked bmp data (number of blocks).
+	  Default value is 3MB.
+
+source "board/freescale/common/Kconfig"
+
+endif

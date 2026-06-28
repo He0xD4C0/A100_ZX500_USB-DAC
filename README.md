@@ -36,7 +36,7 @@ A105_DAC_Mode/
 ├── Image.gz              # 已编译的内核镜像（含 UAC2 驱动）
 ├── build-kernel.sh       # 内核一键编译脚本
 ├── PLAN.md               # 详细技术方案
-├── sony-gplsource/       # 索尼 GPL 源码包（.gitignore 已排除）
+├── sony-gplsource/       # 索尼 GPL 源码（完整 AOSP 内核树）
 ├── activity/             # Android 控制 App（Jetpack Compose）
 │   └── app/src/main/
 │       ├── assets/uac2_bridge   # 已编译的桥接守护进程（arm64 静态）
@@ -126,25 +126,16 @@ cp uac2_bridge ../activity/app/src/main/assets/uac2_bridge
 
 ### 获取内核源码
 
-本项目仅提供内核补丁和 defconfig 修改记录（`kernel_patches/`），**不托管完整的 GPL 源码包**。
+本项目**已包含**索尼在 GPL 协议下发布的 **NW-A100 / NW-ZX500 系列 Linux 源码**（gpl_source.tgz，版本 20211130），解压在 `sony-gplsource/` 目录下。
 
-内核基于索尼在 GPL 协议下发布的 **NW-A100 / NW-ZX500 系列 Linux 源码**（版本 20211130）。我已将源码包下载并提取到本仓库的 `sony-gplsource/` 目录下。你也可以直接前往索尼官方页面下载：
+内核基于索尼 GPL 源码包中的 `vendor/nxp-opensource/kernel_imx/`，你也可直接前往索尼官方页面下载：
 
 > **https://oss.sony.net/Products/Linux/Audio/NW-A105_Ver20211130.html**
 >
 > 适用型号：NW-A105, NW-A105HN, NW-A106, NW-A106HN, NW-A107,
 > NW-A100TPS, NW-ZX505, NW-ZX507
->
-> 下载文件：`gpl_source.tgz`
 
-下载后将 `gpl_source.tgz` 放到项目根目录，解压到 `sony-gplsource/`：
-
-```bash
-# 在 PowerShell（项目根目录）中执行
-tar -xzf gpl_source.tgz -C sony-gplsource
-```
-
-解压后内核源码位于 `sony-gplsource/vendor/nxp-opensource/kernel_imx/`。
+内核源码位于 `sony-gplsource/vendor/nxp-opensource/kernel_imx/`。
 
 ### 编译内核
 
@@ -195,7 +186,7 @@ tar -xzf gpl_source.tgz -C sony-gplsource
 
 ### GPL 源码
 
-本项目中 `Image.gz`（预编译内核）基于索尼发布的 GPL 源码编译。源码提取到 `sony-gplsource/` 目录（已被 `.gitignore` 排除，不会进入版本控制）。完整的 GPL 源码包也可从索尼官方下载：
+本项目中 `Image.gz`（预编译内核）基于索尼发布的 GPL 源码编译。索尼 GPL 源码已包含在 `sony-gplsource/` 目录下进入版本控制，以履行 GPL 协议的源码分发义务。完整的 GPL 源码包也可从索尼官方下载：
 
 > **https://oss.sony.net/Products/Linux/Audio/NW-A105_Ver20211130.html**
 
