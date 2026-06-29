@@ -67,9 +67,13 @@ fi
 echo "→ 应用内核配置..."
 cp "$KERNEL_CONFIG" "$KERNEL_SRC/.config"
 
+# 准备内核构建环境（生成 include/config/auto.conf 等）
+echo "→ 准备构建环境 (olddefconfig)..."
+cd "$KERNEL_SRC"
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
 # 编译内核
 echo "→ 开始编译 (CROSS_COMPILE=aarch64-linux-gnu-)..."
-cd "$KERNEL_SRC"
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
      KCFLAGS='-w' -j$(nproc) Image.gz modules
 
