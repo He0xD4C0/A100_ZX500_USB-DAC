@@ -1,6 +1,0 @@
-config DRM_IMX_DCSS
-	tristate
-	depends on DRM_IMX
-	depends on IMX_DCSS_CORE
-	default y if DRM_IMX=y
-	default m if DRM_IMX=m

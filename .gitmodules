@@ -4,3 +4,6 @@
 [submodule "activity"]
 	path = activity
 	url = https://github.com/He0xD4C0/A100_ZX500_USB-DAC_Activity.git
+[submodule "sony-gplsource"]
+	path = sony-gplsource
+	url = https://github.com/He0xD4C0/A100_ZX500_kernel.git

@@ -1,1 +1,0 @@
-#define CONFIG_MKFS_REISER 1
