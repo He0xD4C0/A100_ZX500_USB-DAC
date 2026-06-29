@@ -33,34 +33,66 @@ imx-audio-cxd3778gf (card#1, playback)
 
 ```
 A105_DAC_Mode/
-├── Image.gz              # 已编译的内核镜像（含 UAC2 驱动）
-├── build-kernel.sh       # 内核一键编译脚本
-├── PLAN.md               # 详细技术方案
-├── sony-gplsource/       # 索尼 GPL 源码（完整 AOSP 内核树）
-├── activity/             # Android 控制 App（Jetpack Compose）
+├── Image.gz                 # 已编译的内核镜像（含 UAC2 驱动）
+├── boot.img                 # 打包好的 Android boot image（可 fastboot 刷入）
+├── build-kernel.sh          # 内核一键编译脚本
+├── build-bootimg.sh         # boot.img 打包脚本（自动使用原厂 ramdisk）
+├── PLAN.md                  # 详细技术方案
+├── sony-gplsource/          # 索尼 GPL 源码（完整 AOSP 内核树）
+├── original_image/          # 原厂固件镜像（ramdisk 提取源）
+│   └── A105/
+│       ├── boot.img         #   原厂 boot.img（ramdisk + 参数参考）
+│       ├── bootloader.img
+│       ├── dtbo.img
+│       ├── system.img
+│       ├── vendor.img
+│       └── vbmeta.img
+├── activity/                # Android 控制 App（Jetpack Compose）
 │   └── app/src/main/
 │       ├── assets/uac2_bridge   # 已编译的桥接守护进程（arm64 静态）
 │       └── java/.../MainActivity.kt
 ├── daemon/
-│   ├── uac2_bridge.c     # 桥接守护进程源码
-│   └── tinyalsa/         # 依赖（git submodule）
-└── kernel_patches/       # 内核修改记录
+│   ├── uac2_bridge.c        # 桥接守护进程源码
+│   └── tinyalsa/            # 依赖（git submodule）
+└── kernel_patches/          # 内核修改记录
 ```
 
 ---
 
 ## 部署步骤
 
-### 第一步：刷入内核
+### 第一步：打包 boot.img
 
-> 内核已编译完毕并存放在根目录 `Image.gz`，内置了 UAC2 驱动（`CONFIG_USB_CONFIGFS_F_UAC2=y`）。
+内核编译完成后，需要将内核、DTB、原厂 ramdisk 打包为 Android boot image：
+
+```bash
+# 自动使用 original_image/A105/boot.img 中的原厂 ramdisk 和参数
+./build-bootimg.sh
+```
+
+脚本会从原厂 `boot.img` 中提取完整 ramdisk（含 init / sepolicy / fstab 等），
+并用以下（从 boot_b 实测的）参数组装新 boot.img：
+
+| 参数 | 值 |
+|------|-----|
+| Base | `0x40400000` |
+| Kernel addr | `0x40480000` |
+| Ramdisk addr | `0x43600000` |
+| Tags addr | `0x40400100` |
+| Page size | 2048 |
+| Header version | 1 (v1) |
+| Kernel 格式 | 未压缩 ARM64 PE/COFF Image (`MZ` 头) |
+
+关键 cmdline：`init=/init androidboot.hardware=icx1293 cma=800M@0x400M-0xb7fM ...`
+
+### 第二步：刷入内核
 
 ```bash
 # 重启到 Bootloader 模式
 adb reboot bootloader
 
-# 刷入内核（保留 system/vendor 分区不变）
-fastboot flash boot Image.gz
+# 刷入 boot.img（保留 system/vendor 分区不变）
+fastboot flash boot boot.img
 
 # 重启
 fastboot reboot
@@ -73,17 +105,17 @@ adb shell "zcat /proc/config.gz | grep UAC2"
 # 预期输出: CONFIG_USB_CONFIGFS_F_UAC2=y
 ```
 
-### 第二步：安装控制 App
+### 第三步：安装控制 App
 
 用 Android Studio 打开 `activity/` 目录，然后直接 **Run → Run 'app'** 安装到设备。
 
 App 内置了已编译好的 `uac2_bridge` 守护进程，**无需手动推送任何文件**。
 
-### 第三步：授予 Root 权限
+### 第四步：授予 Root 权限
 
 首次打开 App 时，Magisk / KernelSU 会弹出授权弹窗，选择"授权"即可。
 
-### 第四步：使用
+### 第五步：使用
 
 1. 将 NW-A105 通过 USB-C 数据线连接到 PC
 2. 打开 **USB DAC** App
@@ -148,6 +180,18 @@ cp uac2_bridge ../activity/app/src/main/assets/uac2_bridge
 # ./build-kernel.sh /custom/path/to/kernel_imx
 ```
 
+脚本会自动处理 GCC 15 工具链兼容性问题（SELinux classmap.h、dtc yylloc）。
+
+### 打包 boot.img
+
+```bash
+# 自动从 original_image/A105/boot.img 提取原厂 ramdisk 并打包
+./build-bootimg.sh
+
+# 也可指定自定义原厂 boot.img:
+# ./build-bootimg.sh /path/to/stock_boot.img
+```
+
 ---
 
 ## 工作原理
@@ -179,14 +223,24 @@ cp uac2_bridge ../activity/app/src/main/assets/uac2_bridge
 
 ## 许可证
 
-- 内核补丁（`kernel_patches/`）：GPL v2
-- Bridge 守护进程（`daemon/uac2_bridge.c`）：GPL v2
-- tinyalsa（`daemon/tinyalsa/`）：BSD 3-Clause
-- Android App（`activity/`）：MIT
+| 组件 | 许可证 |
+|------|--------|
+| 内核补丁（`kernel_patches/`） | GPL v2 |
+| Bridge 守护进程（`daemon/uac2_bridge.c`） | GPL v2 |
+| tinyalsa（`daemon/tinyalsa/`） | BSD 3-Clause |
+| Android App（`activity/`） | MIT |
+| 构建脚本（`build-kernel.sh`, `build-bootimg.sh`） | GPL v3 |
+
+### GPL 合规声明
+
+完整的 GPL 合规信息（Sony 原始源码来源、内核修改内容、KernelSU 声明、
+许可证清单）见 **[GPL_COMPLIANCE.md](GPL_COMPLIANCE.md)**。
 
 ### GPL 源码
 
-本项目中 `Image.gz`（预编译内核）基于索尼发布的 GPL 源码编译。索尼 GPL 源码已包含在 `sony-gplsource/` 目录下进入版本控制，以履行 GPL 协议的源码分发义务。完整的 GPL 源码包也可从索尼官方下载：
+本项目中 `boot.img`（预编译内核）基于索尼发布的 GPL 源码编译并修改。
+索尼 GPL 源码已包含在 `sony-gplsource/` 目录下进入版本控制，以履行
+GPL 协议的源码分发义务。完整的 GPL 源码包也可从索尼官方下载：
 
 > **https://oss.sony.net/Products/Linux/Audio/NW-A105_Ver20211130.html**
 

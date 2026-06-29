@@ -32,6 +32,25 @@ Module.symvers
 __pycache__/
 *.pyc
 
+# ─── 内核构建产物 ──────────────────────────────────────────
+/Image.gz
+/boot.img
+*.dtb
+
+# ─── 原厂固件（二进制，不纳入版本控制）──────────────────────
+/original_image/
+
+# ─── 内核源码树构建临时文件 ─────────────────────────────────
+sony-gplsource/**/.config
+sony-gplsource/**/.config.old
+sony-gplsource/**/.tmp_*
+sony-gplsource/**/include/config/
+sony-gplsource/**/include/generated/
+sony-gplsource/**/Module.symvers
+sony-gplsource/**/modules.order
+sony-gplsource/**/*.o
+sony-gplsource/**/*.ko
+
 # ─── 杂项临时文件 ─────────────────────────────────────────
 *.log
 *.tmp
