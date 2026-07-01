@@ -63,6 +63,10 @@ CONFIG_CONFIGFS_FS=y                             # ConfigFS 文件系统
 # ─── CXD3778GF DAC 驱动 ────────────────────────────────
 CONFIG_SND_SOC_IMX_CXD3778GF=y                   # i.MX ↔ CXD3778GF 平台驱动
 CONFIG_SND_SOC_CXD3778GF=y                       # CXD3778GF Codec 驱动
+
+# ─── SELinux 宽松模式 ──────────────────────────────────
+CONFIG_SECURITY_SELINUX_BOOTPARAM=y              # 允许内核接受 enforcing=0 参数
+# 配合 cmdline: androidboot.selinux=permissive enforcing=0
 ```
 
 > **注意**: 原厂 `android_dmp1_defconfig` 仅有约 500 行精简配置项。

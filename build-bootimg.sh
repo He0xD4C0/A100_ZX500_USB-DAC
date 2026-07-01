@@ -15,9 +15,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 
-# 路径
-KERNEL_IMAGE="$PROJECT_ROOT/sony-gplsource/vendor/nxp-opensource/kernel_imx/arch/arm64/boot/Image"
-KERNEL_DTB="$PROJECT_ROOT/sony-gplsource/vendor/nxp-opensource/kernel_imx/arch/arm64/boot/dts/sony/sony-imx8mm-dmp1.dtb"
+# 路径 (DTB 由 DTBO 分区提供，不在 boot.img 中)
+# 内核 Image 路径 (优先 stable 树, 其次 sony-gplsource)
+STABLE_IMAGE="/home/he0xd4c0/A100_ZX500_USB-DAC/SonyWalkman/kernel_imx/arch/arm64/boot/Image"
+GPL_IMAGE="$PROJECT_ROOT/sony-gplsource/vendor/nxp-opensource/kernel_imx/arch/arm64/boot/Image"
+if [ -f "$STABLE_IMAGE" ]; then
+    KERNEL_IMAGE="$STABLE_IMAGE"
+else
+    KERNEL_IMAGE="$GPL_IMAGE"
+fi
 OUTPUT_IMG="$PROJECT_ROOT/boot.img"
 
 # 原厂 boot.img —— 优先用参数指定的，其次用 original_image/ 下的
@@ -51,11 +57,6 @@ if [ ! -f "$KERNEL_IMAGE" ]; then
     exit 1
 fi
 
-if [ ! -f "$KERNEL_DTB" ]; then
-    echo "错误: 找不到 DTB: $KERNEL_DTB"
-    exit 1
-fi
-
 if ! command -v mkbootimg &>/dev/null; then
     echo "错误: 未安装 mkbootimg"
     echo "安装: sudo apt install mkbootimg"
@@ -76,7 +77,7 @@ PAGESIZE="2048"
 HEADER_VERSION="1"
 OS_VERSION="9.0.0"
 OS_PATCH_LEVEL="2021-11"
-CMDLINE="init=/init androidboot.console=ttymxc1 androidboot.hardware=icx1293 cma=800M@0x400M-0xb7fM androidboot.primary_display=imx-drm firmware_class.path=/vendor/firmware transparent_hugepage=never androidboot.displaymode=720p buildvariant=user"
+CMDLINE="init=/init console=tty0 console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ignore_loglevel oops=panic panic=5 androidboot.console=ttymxc1 androidboot.hardware=icx1293 androidboot.selinux=permissive enforcing=0 cma=800M@0x400M-0xb7fM androidboot.primary_display=imx-drm firmware_class.path=/vendor/firmware transparent_hugepage=never androidboot.displaymode=720p buildvariant=user"
 
 if [ -n "$STOCK_BOOTIMG" ] && [ -f "$STOCK_BOOTIMG" ]; then
     echo "→ 提取原厂 boot.img: $STOCK_BOOTIMG"
@@ -121,7 +122,7 @@ if [ -n "$STOCK_BOOTIMG" ] && [ -f "$STOCK_BOOTIMG" ]; then
 
     # 使用 stock cmdline
     if [ -n "$STOCK_CMDLINE" ]; then
-        CMDLINE="$STOCK_CMDLINE"
+        CMDLINE="$STOCK_CMDLINE androidboot.selinux=permissive enforcing=0 console=tty0 console=ttymxc1,115200 ignore_loglevel oops=panic panic=5"
     fi
 
     # 复制 ramdisk
@@ -154,7 +155,6 @@ echo "  cmdline:        $CMDLINE"
 mkbootimg \
     --kernel "$KERNEL_IMAGE" \
     --ramdisk "$RAMDISK_FILE" \
-    --dtb "$KERNEL_DTB" \
     --base "$BASE" \
     --kernel_offset "$KERNEL_OFFSET" \
     --ramdisk_offset "$RAMDISK_OFFSET" \

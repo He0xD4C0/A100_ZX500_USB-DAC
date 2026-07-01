@@ -43,6 +43,12 @@ is_bridge_running() {
     return $?
 }
 
+is_uac2_loaded() {
+    # UAC2 已内建编译 (=y)，无需模块加载
+    [ -d "/sys/kernel/config/usb_gadget" ] && return 0
+    return 1
+}
+
 # ============================================================
 # 启用 USB DAC
 # ============================================================
@@ -97,8 +103,9 @@ enable_dac() {
         UAC2_CARD=$(cat /proc/asound/cards 2>/dev/null | \
                     grep -c "UAC\|Gadget\|uac2" 2>/dev/null || echo -n "")
 
-        # 尝试常见的 card#2
-        $BRIDGE_BIN start -r 44100 -p 1024 &
+        # bridge 自动检测 /proc/asound 的 UAC2 协商格式
+        # -d 0: hires-out (默认), -d 2: low-power
+        $BRIDGE_BIN start -d $CXD_DEVICE &
         BRIDGE_PID=$!
         echo $BRIDGE_PID > "$BRIDGE_PIDFILE"
 
